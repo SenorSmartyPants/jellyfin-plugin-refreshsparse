@@ -16,7 +16,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    if: github.repository == 'jellyfin/jellyfin-plugin-template'
+    if: github.repository == 'senorsmartypants/jellyfin-plugin-refreshsparse'
 
     strategy:
       fail-fast: false

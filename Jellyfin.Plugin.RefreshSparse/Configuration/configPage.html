@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Template</title>
+    <title>Refresh sparse metadata</title>
 </head>
 <body>
-    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div id="RefreshSparseConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form id="TemplateConfigForm">
+                <form id="RefreshSparseConfigForm">
                     <div class="selectContainer">
                         <label class="selectLabel" for="Options">Several Options</label>
                         <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
@@ -41,31 +41,31 @@
             </div>
         </div>
         <script type="text/javascript">
-            var TemplateConfig = {
-                pluginUniqueId: 'eb5d7894-8eef-4b36-aa6f-5d124e828ce1'
+            var RefreshSparseConfig = {
+                pluginUniqueId: '12b44f20-6cfb-4be5-9950-3d0fbe74fa35'
             };
 
-            document.querySelector('#TemplateConfigPage')
+            document.querySelector('#RefreshSparseConfigPage')
                 .addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                    ApiClient.getPluginConfiguration(RefreshSparseConfig.pluginUniqueId).then(function (config) {
                         document.querySelector('#Options').value = config.Options;
                         document.querySelector('#AnInteger').value = config.AnInteger;
                         document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
                         document.querySelector('#AString').value = config.AString;
                         Dashboard.hideLoadingMsg();
-                    });    
+                    });
                 });
-            
-            document.querySelector('#TemplateConfigForm')
+
+            document.querySelector('#RefreshSparseConfigForm')
                 .addEventListener('submit', function() {
                 Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                ApiClient.getPluginConfiguration(RefreshSparseConfig.pluginUniqueId).then(function (config) {
                     config.Options = document.querySelector('#Options').value;
                     config.AnInteger = document.querySelector('#AnInteger').value;
                     config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
                     config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                    ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });
                 });

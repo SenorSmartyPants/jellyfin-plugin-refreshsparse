@@ -1,6 +1,6 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "RefreshSparse"
+guid: "12b44f20-6cfb-4be5-9950-3d0fbe74fa35"
 version: "1.0.0.0"
 targetAbi: "10.7.0.0"
 framework: "net5.0"
@@ -11,6 +11,6 @@ description: >
 category: "General"
 owner: "jellyfin"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+- "Jellyfin.Plugin.RefreshSparse.dll"
 changelog: >
   changelog
