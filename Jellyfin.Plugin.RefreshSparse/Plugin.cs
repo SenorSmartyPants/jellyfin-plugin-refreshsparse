@@ -1,3 +1,5 @@
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -34,7 +36,7 @@ namespace Jellyfin.Plugin.RefreshSparse
         /// <summary>
         /// Gets the current plugin instance.
         /// </summary>
-        public static Plugin? Instance { get; private set; }
+        public static Plugin Instance { get; private set; }
 
         /// <inheritdoc />
         public IEnumerable<PluginPageInfo> GetPages()
