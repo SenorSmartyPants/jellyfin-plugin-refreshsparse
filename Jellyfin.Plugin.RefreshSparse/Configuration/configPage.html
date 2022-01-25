@@ -58,7 +58,7 @@
                 });
 
             document.querySelector('#RefreshSparseConfigForm')
-                .addEventListener('submit', function() {
+                .addEventListener('submit', function(e) {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(RefreshSparseConfig.pluginUniqueId).then(function (config) {
                     config.Options = document.querySelector('#Options').value;
@@ -70,6 +70,7 @@
                     });
                 });
 
+                e.preventDefault();
                 return false;
             });
         </script>
