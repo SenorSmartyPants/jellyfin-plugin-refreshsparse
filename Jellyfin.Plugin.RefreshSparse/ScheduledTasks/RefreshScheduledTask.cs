@@ -77,7 +77,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                 _libraryManager.GetItemList(
                         new InternalItemsQuery
                         {
-                            IncludeItemTypes = new[] { "Episode" },
+                            IncludeItemTypes = new[] { BaseItemKind.Episode },
                             IsVirtualItem = false,
                             Recursive = true,
                             MinPremiereDate = minPremiereDate
