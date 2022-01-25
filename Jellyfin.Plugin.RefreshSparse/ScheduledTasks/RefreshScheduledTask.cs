@@ -122,12 +122,13 @@ namespace Jellyfin.Plugin.RefreshSparse
             {
                 _logger.LogInformation("Will refresh {X} episodes", numEpisodes);
 
-                foreach (var item in episodes)
+                foreach (Episode episode in episodes)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     try
                     {
-                        await item.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                        _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
+                        await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
