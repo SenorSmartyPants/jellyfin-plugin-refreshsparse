@@ -6,17 +6,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
-using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Providers;
-using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -58,22 +55,45 @@ namespace Jellyfin.Plugin.RefreshSparse
 
         public bool IsLogged => true;
 
-        public Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        private bool IsDate(string possibleDate)
         {
-            // episodes that aired in the past 14 days
-            var minPremiereDate = DateTime.UtcNow.Date.AddDays(-14);
+            DateTime d;
+            return DateTime.TryParse(possibleDate, out d);
+        }
 
-            var mediaItems =
+        public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        {
+            var config = Plugin.Instance.Configuration;
+
+            // episodes that aired in the past MaxDays days
+            DateTime? minPremiereDate = null;
+            var maxDays = config.MaxDays;
+            if (maxDays > -1 )
+            {
+                minPremiereDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
+            }
+
+            List<Episode> episodes =
                 _libraryManager.GetItemList(
                         new InternalItemsQuery
                         {
                             IncludeItemTypes = new[] { "Episode" },
                             IsVirtualItem = false,
                             Recursive = true,
-                            MinPremiereDate = minPremiereDate,
-                        }).ToList();
+                            MinPremiereDate = minPremiereDate
+                        }).Cast<Episode>().ToList();
 
-            // just get missing
+            var badNameList = config.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
+
+            episodes = episodes.Where(i => (config.MissingImage && !i.HasImage(ImageType.Primary))
+                || (config.MissingOverview && string.IsNullOrWhiteSpace(i.Overview))
+                || (config.MissingName && string.IsNullOrWhiteSpace(i.Name))
+                || (config.NameIsDate && IsDate(i.Name))
+                || badNameList.Any(en => i.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
+                || i.ProviderIds.Count < config.MinimumProviderIds).ToList();
+            // DateLastRefreshed - don't hammer metadata provider, won't be new info
+
+            // just get missing, all is being overwritten currently in 10.8 regardless of these settings.
             var replaceAllMetadata = false;
             var replaceAllImages = false;
 
@@ -81,7 +101,6 @@ namespace Jellyfin.Plugin.RefreshSparse
             var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
             var imageRefreshMode = MetadataRefreshMode.FullRefresh;
 
-            // TODO more query options
             var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
             {
                 MetadataRefreshMode = metadataRefreshMode,
@@ -95,13 +114,42 @@ namespace Jellyfin.Plugin.RefreshSparse
                 IsAutomated = false
             };
 
-            // Refresh all in list
-            foreach (var item in mediaItems)
-            {
-                item.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
-            }
+            var numComplete = 0;
 
-            return Task.FromResult(true);
+            var numEpisodes = episodes.Count;
+
+            if (numEpisodes > 0)
+            {
+                _logger.LogInformation("Will refresh {X} episodes", numEpisodes);
+
+                foreach (var item in episodes)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    try
+                    {
+                        await item.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (System.Exception)
+                    {
+                        throw;
+                    }
+
+                    // Update progress
+                    numComplete++;
+                    double percent = numComplete;
+                    percent /= numEpisodes;
+
+                    progress.Report(100 * percent);
+                }
+
+                progress.Report(100);
+
+                _logger.LogInformation("Sparse episode refresh completed");
+            }
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()

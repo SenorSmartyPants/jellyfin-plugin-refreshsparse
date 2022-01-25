@@ -5,32 +5,48 @@
     <title>Refresh sparse metadata</title>
 </head>
 <body>
-    <div id="RefreshSparseConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="page" class="page type-interior pluginConfigurationPage configPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form id="RefreshSparseConfigForm">
-                    <div class="selectContainer">
-                        <label class="selectLabel" for="Options">Several Options</label>
-                        <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
-                            <option id="optOneOption" value="OneOption">One Option</option>
-                            <option id="optAnotherOption" value="AnotherOption">Another Option</option>
-                        </select>
+                <form class="configForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxDays">Maximum days</label>
+                        <input id="MaxDays" name="MaxDays" type="number" is="emby-input" min="-1" />
+                        <div class="fieldDescription">-1 to disable episode age check</div>
                     </div>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>
-                        <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />
-                        <div class="fieldDescription">A Description</div>
+                        <label class="inputLabel inputLabelUnfocused" for="MinimumProviderIds">Minimum provider IDs</label>
+                        <input id="MinimumProviderIds" name="MinimumProviderIds" type="number" is="emby-input" min="0" />
+                        <div class="fieldDescription">Minimum number of external provider IDs</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
-                            <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>A Checkbox</span>
+                            <input id="MissingImage" name="MissingImage" type="checkbox" is="emby-checkbox" />
+                            <span>Missing image</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="MissingName" name="MissingName" type="checkbox" is="emby-checkbox" />
+                            <span>Missing episode name</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="MissingOverview" name="MissingOverview" type="checkbox" is="emby-checkbox" />
+                            <span>Missing overview</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="NameIsDate" name="NameIsDate" type="checkbox" is="emby-checkbox" />
+                            <span>Episode name is a date. Example "January 1, 2022"</span>
                         </label>
                     </div>
                     <div class="inputContainer">
-                        <label class="inputeLabel inputLabelUnfocused" for="AString">A String</label>
-                        <input id="AString" name="AString" type="text" is="emby-input" />
-                        <div class="fieldDescription">Another Description</div>
+                        <label class="inputeLabel inputLabelUnfocused" for="BadNames">Bad Episode Names</label>
+                        <input id="BadNames" name="BadNames" type="text" is="emby-input" />
+                        <div class="fieldDescription">| separated list of placeholder episode names. Example "Episode |TBA"</div>
                     </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
@@ -45,26 +61,32 @@
                 pluginUniqueId: '12b44f20-6cfb-4be5-9950-3d0fbe74fa35'
             };
 
-            document.querySelector('#RefreshSparseConfigPage')
+            document.querySelector('.configPage')
                 .addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(RefreshSparseConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#Options').value = config.Options;
-                        document.querySelector('#AnInteger').value = config.AnInteger;
-                        document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                        document.querySelector('#AString').value = config.AString;
+                        document.querySelector('#MinimumProviderIds').value = config.MinimumProviderIds;
+                        document.querySelector('#MaxDays').value = config.MaxDays;
+                        document.querySelector('#MissingImage').checked = config.MissingImage;
+                        document.querySelector('#MissingName').checked = config.MissingName;
+                        document.querySelector('#MissingOverview').checked = config.MissingOverview;
+                        document.querySelector('#NameIsDate').checked = config.NameIsDate;
+                        document.querySelector('#BadNames').value = config.BadNames;
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
-            document.querySelector('#RefreshSparseConfigForm')
+            document.querySelector('.configForm')
                 .addEventListener('submit', function(e) {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(RefreshSparseConfig.pluginUniqueId).then(function (config) {
-                    config.Options = document.querySelector('#Options').value;
-                    config.AnInteger = document.querySelector('#AnInteger').value;
-                    config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    config.AString = document.querySelector('#AString').value;
+                    config.MaxDays = document.querySelector('#MaxDays').value;
+                    config.MinimumProviderIds = document.querySelector('#MinimumProviderIds').value;
+                    config.MissingImage = document.querySelector('#MissingImage').checked;
+                    config.MissingName = document.querySelector('#MissingName').checked;
+                    config.MissingOverview = document.querySelector('#MissingOverview').checked;
+                    config.NameIsDate = document.querySelector('#NameIsDate').checked;
+                    config.BadNames = document.querySelector('#BadNames').value;
                     ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });
