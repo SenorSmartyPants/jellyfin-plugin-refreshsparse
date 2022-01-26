@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
+using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -81,7 +82,12 @@ namespace Jellyfin.Plugin.RefreshSparse
                             IncludeItemTypes = new[] { "Episode" },
                             IsVirtualItem = false,
                             Recursive = true,
-                            MinPremiereDate = minPremiereDate
+                            MinPremiereDate = minPremiereDate,
+                            OrderBy = new[]
+                                {
+                                    (ItemSortBy.SeriesSortName, SortOrder.Ascending),
+                                    (ItemSortBy.SortName, SortOrder.Ascending)
+                                }
                         }).Cast<Episode>().ToList();
 
             var badNameList = config.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
