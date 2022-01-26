@@ -12,7 +12,12 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="MaxDays">Maximum days</label>
                         <input id="MaxDays" name="MaxDays" type="number" is="emby-input" min="-1" />
-                        <div class="fieldDescription">-1 to disable episode age check</div>
+                        <div class="fieldDescription">Max age of episode, based on premiere date. -1 to disable</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="RefreshCooldownMinutes">Refresh cooldown</label>
+                        <input id="RefreshCooldownMinutes" name="RefreshCooldownMinutes" type="number" is="emby-input" min="-1" />
+                        <div class="fieldDescription">Don't refresh episode if already refreshed within X minutes. -1 to disable</div>
                     </div>
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="MinimumProviderIds">Minimum provider IDs</label>
@@ -50,6 +55,18 @@
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
+                            <input id="ReplaceAllMetadata" name="ReplaceAllMetadata" type="checkbox" is="emby-checkbox" />
+                            <span>Replace all metadata</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="ReplaceAllImages" name="ReplaceAllImages" type="checkbox" is="emby-checkbox" />
+                            <span>Replace all images</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
                             <input id="Pretend" name="Pretend" type="checkbox" is="emby-checkbox" />
                             <span>Don't actually refresh episodes. Useful for debugging. Check logs to see what episodes would be updated.</span>
                         </label>
@@ -79,6 +96,9 @@
                         document.querySelector('#NameIsDate').checked = config.NameIsDate;
                         document.querySelector('#BadNames').value = config.BadNames;
                         document.querySelector('#Pretend').checked = config.Pretend;
+                        document.querySelector('#RefreshCooldownMinutes').value = config.RefreshCooldownMinutes;
+                        document.querySelector('#ReplaceAllImages').checked = config.ReplaceAllImages;
+                        document.querySelector('#ReplaceAllMetadata').checked = config.ReplaceAllMetadata;
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -95,6 +115,9 @@
                     config.NameIsDate = document.querySelector('#NameIsDate').checked;
                     config.BadNames = document.querySelector('#BadNames').value;
                     config.Pretend = document.querySelector('#Pretend').checked;
+                    config.RefreshCooldownMinutes = document.querySelector('#RefreshCooldownMinutes').value;
+                    config.ReplaceAllImages = document.querySelector('#ReplaceAllImages').checked;
+                    config.ReplaceAllMetadata = document.querySelector('#ReplaceAllMetadata').checked;
                     ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

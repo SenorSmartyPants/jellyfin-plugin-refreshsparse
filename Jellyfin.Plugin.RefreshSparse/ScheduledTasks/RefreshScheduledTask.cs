@@ -100,11 +100,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                 || i.ProviderIds.Count < config.MinimumProviderIds).ToList();
             // DateLastRefreshed - don't hammer metadata provider, won't be new info
 
-            // just get missing, all is being overwritten currently in 10.8 regardless of these settings.
-            var replaceAllMetadata = false;
-            var replaceAllImages = false;
-
-            // when called from menu, these are always full. Unless scan for new/updated files
+            // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
             var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
             var imageRefreshMode = MetadataRefreshMode.FullRefresh;
 
@@ -112,12 +108,12 @@ namespace Jellyfin.Plugin.RefreshSparse
             {
                 MetadataRefreshMode = metadataRefreshMode,
                 ImageRefreshMode = imageRefreshMode,
-                ReplaceAllImages = replaceAllImages,
-                ReplaceAllMetadata = replaceAllMetadata,
+                ReplaceAllImages = config.ReplaceAllImages,
+                ReplaceAllMetadata = config.ReplaceAllMetadata,
                 ForceSave = metadataRefreshMode == MetadataRefreshMode.FullRefresh
                     || imageRefreshMode == MetadataRefreshMode.FullRefresh
-                    || replaceAllImages
-                    || replaceAllMetadata,
+                    || config.ReplaceAllImages
+                    || config.ReplaceAllMetadata,
                 IsAutomated = false
             };
 
@@ -143,7 +139,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                     {
                         LogInfo(episode);
                         var minutesSinceRefreshed = (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
-                        if (minutesSinceRefreshed < 60)
+                        if (config.RefreshCooldownMinutes > 0 && minutesSinceRefreshed < config.RefreshCooldownMinutes)
                         {
                             _logger.LogInformation("    Skipping refresh: episode was refreshed {X:N0} minutes ago",  minutesSinceRefreshed );
                         }

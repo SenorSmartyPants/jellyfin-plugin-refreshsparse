@@ -17,6 +17,10 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             NameIsDate = false;
             BadNames = string.Empty;
             Pretend = true;
+            RefreshCooldownMinutes = 60;
+            // all is being overwritten currently in 10.8 regardless of these settings.
+            ReplaceAllImages = false;
+            ReplaceAllMetadata = false;
         }
 
         public int MaxDays { get; set; }
@@ -34,5 +38,11 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public string BadNames { get; set; }
 
         public bool Pretend { get; set; }
+
+        public int RefreshCooldownMinutes { get; set; }
+
+        public bool ReplaceAllImages { get; set; }
+
+        public bool ReplaceAllMetadata { get; set; }
     }
 }
