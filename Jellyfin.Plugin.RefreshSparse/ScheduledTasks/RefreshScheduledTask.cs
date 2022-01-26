@@ -142,14 +142,14 @@ namespace Jellyfin.Plugin.RefreshSparse
                     try
                     {
                         LogInfo(episode);
-                        if (!config.Pretend)
+                        var minutesSinceRefreshed = (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
+                        if (minutesSinceRefreshed < 60)
                         {
-                            var minutesSinceRefreshed = (DateTime.Now - episode.DateLastRefreshed).TotalMinutes;
-                            if (minutesSinceRefreshed < 60)
-                            {
-                                _logger.LogInformation("    Skipping refresh: episode was refreshed {X} minutes ago", minutesSinceRefreshed);
-                            }
-                            else
+                            _logger.LogInformation("    Skipping refresh: episode was refreshed {X:N0} minutes ago",  minutesSinceRefreshed );
+                        }
+                        else
+                        {
+                            if (!config.Pretend)
                             {
                                 await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
                             }
