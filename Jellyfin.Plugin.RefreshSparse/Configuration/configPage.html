@@ -48,6 +48,12 @@
                         <input id="BadNames" name="BadNames" type="text" is="emby-input" />
                         <div class="fieldDescription">| separated list of placeholder episode names. Example "Episode |TBA"</div>
                     </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="Pretend" name="Pretend" type="checkbox" is="emby-checkbox" />
+                            <span>Don't actually refresh episodes. Useful for debugging. Check logs to see what episodes would be updated.</span>
+                        </label>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -72,6 +78,7 @@
                         document.querySelector('#MissingOverview').checked = config.MissingOverview;
                         document.querySelector('#NameIsDate').checked = config.NameIsDate;
                         document.querySelector('#BadNames').value = config.BadNames;
+                        document.querySelector('#Pretend').checked = config.Pretend;
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -87,6 +94,7 @@
                     config.MissingOverview = document.querySelector('#MissingOverview').checked;
                     config.NameIsDate = document.querySelector('#NameIsDate').checked;
                     config.BadNames = document.querySelector('#BadNames').value;
+                    config.Pretend = document.querySelector('#Pretend').checked;
                     ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

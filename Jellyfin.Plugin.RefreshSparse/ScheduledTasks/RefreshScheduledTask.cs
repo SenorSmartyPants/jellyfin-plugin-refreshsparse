@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.RefreshSparse.Configuration;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -120,7 +121,14 @@ namespace Jellyfin.Plugin.RefreshSparse
 
             if (numEpisodes > 0)
             {
-                _logger.LogInformation("Will refresh {X} episodes", numEpisodes);
+                if (config.Pretend)
+                {
+                    _logger.LogInformation("Pretending to refresh {X} episodes", numEpisodes);
+                }
+                else
+                {
+                    _logger.LogInformation("Will refresh {X} episodes", numEpisodes);
+                }
 
                 foreach (Episode episode in episodes)
                 {

@@ -16,6 +16,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             MissingOverview = true;
             NameIsDate = false;
             BadNames = string.Empty;
+            Pretend = true;
         }
 
         public int MaxDays { get; set; }
@@ -31,5 +32,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool NameIsDate { get; set; }
 
         public string BadNames { get; set; }
+
+        public bool Pretend { get; set; }
     }
 }
