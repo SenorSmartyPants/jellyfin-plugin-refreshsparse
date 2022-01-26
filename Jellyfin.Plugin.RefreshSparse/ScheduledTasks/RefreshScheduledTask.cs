@@ -90,7 +90,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                                 }
                         }).Cast<Episode>().ToList();
 
-            var badNameList = config.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
+            var badNameList = BadNamesAsArray(config);
 
             episodes = episodes.Where(i => (config.MissingImage && !i.HasImage(ImageType.Primary))
                 || (config.MissingOverview && string.IsNullOrWhiteSpace(i.Overview))
@@ -141,8 +141,19 @@ namespace Jellyfin.Plugin.RefreshSparse
                     cancellationToken.ThrowIfCancellationRequested();
                     try
                     {
-                        _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
-                        await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                        LogInfo(episode);
+                        if (!config.Pretend)
+                        {
+                            var minutesSinceRefreshed = (DateTime.Now - episode.DateLastRefreshed).TotalMinutes;
+                            if (minutesSinceRefreshed < 60)
+                            {
+                                _logger.LogInformation("    Skipping refresh: episode was refreshed {X} minutes ago", minutesSinceRefreshed);
+                            }
+                            else
+                            {
+                                await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                            }
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -164,6 +175,48 @@ namespace Jellyfin.Plugin.RefreshSparse
                 progress.Report(100);
 
                 _logger.LogInformation("Sparse episode refresh completed");
+            }
+        }
+
+        private string[] BadNamesAsArray(PluginConfiguration config)
+        {
+            return config.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private void LogInfo(Episode episode)
+        {
+            var config = Plugin.Instance.Configuration;
+            var badNameList = BadNamesAsArray(config);
+
+            _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
+            if (config.MissingImage && !episode.HasImage(ImageType.Primary))
+            {
+                _logger.LogInformation("    Episode missing primary image");
+            }
+
+            if (config.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
+            {
+                _logger.LogInformation("    Episode missing overview");
+            }
+
+            if (config.MissingName && string.IsNullOrWhiteSpace(episode.Name))
+            {
+                _logger.LogInformation("    Episode missing name");
+            }
+
+            if (config.NameIsDate && IsDate(episode.Name))
+            {
+                _logger.LogInformation("    Episode name is a date");
+            }
+
+            if (badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                _logger.LogInformation("    Episode name matches bad name list");
+            }
+
+            if (episode.ProviderIds.Count < config.MinimumProviderIds)
+            {
+                _logger.LogInformation("    Episode only has {X} provider IDs.", episode.ProviderIds.Count);
             }
         }
 
