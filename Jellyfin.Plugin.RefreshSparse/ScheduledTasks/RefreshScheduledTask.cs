@@ -63,6 +63,11 @@ namespace Jellyfin.Plugin.RefreshSparse
             return DateTime.TryParse(possibleDate, out d);
         }
 
+        private double MinutesSinceRefresh(Episode episode)
+        {
+            return (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
+        }
+
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
             var config = Plugin.Instance.Configuration;
@@ -92,12 +97,13 @@ namespace Jellyfin.Plugin.RefreshSparse
 
             var badNameList = BadNamesAsArray(config);
 
-            episodes = episodes.Where(i => (config.MissingImage && !i.HasImage(ImageType.Primary))
+            episodes = episodes.Where(i => MinutesSinceRefresh(i) > config.RefreshCooldownMinutes &&
+                ((config.MissingImage && !i.HasImage(ImageType.Primary))
                 || (config.MissingOverview && string.IsNullOrWhiteSpace(i.Overview))
                 || (config.MissingName && string.IsNullOrWhiteSpace(i.Name))
                 || (config.NameIsDate && IsDate(i.Name))
                 || badNameList.Any(en => i.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
-                || i.ProviderIds.Count < config.MinimumProviderIds).ToList();
+                || i.ProviderIds.Count < config.MinimumProviderIds)).ToList();
             // DateLastRefreshed - don't hammer metadata provider, won't be new info
 
             // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
