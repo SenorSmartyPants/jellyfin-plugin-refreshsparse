@@ -136,7 +136,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                                 }
                         }).Cast<Episode>().Where(i => NeedsRefresh(i)
                             && MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes
-                            && _seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase)))
+                            && !_seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase)))
                             .ToList();
 
             var numComplete = 0;
