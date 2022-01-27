@@ -28,6 +28,8 @@ namespace Jellyfin.Plugin.RefreshSparse
         private readonly ILogger<RefreshScheduledTask> _logger;
         private readonly ILocalizationManager _localization;
         private readonly IFileSystem _fileSystem;
+        private readonly PluginConfiguration _pluginConfig;
+        private readonly string[] _badNameList;
 
         public RefreshScheduledTask(
             ILibraryManager libraryManager,
@@ -41,6 +43,9 @@ namespace Jellyfin.Plugin.RefreshSparse
             _logger = logger;
             _localization = localization;
             _fileSystem = fileSystem;
+
+            _pluginConfig = Plugin.Instance.Configuration;
+            _badNameList = BadNamesAsArray();
         }
 
         public string Name => _localization.GetLocalizedString("Refresh sparse episodes");
@@ -68,13 +73,38 @@ namespace Jellyfin.Plugin.RefreshSparse
             return (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
         }
 
+        private bool NeedsRefresh(Episode episode)
+        {
+            return (_pluginConfig.MissingImage && !episode.HasImage(ImageType.Primary))
+                || (_pluginConfig.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
+                || (_pluginConfig.MissingName && string.IsNullOrWhiteSpace(episode.Name))
+                || (_pluginConfig.NameIsDate && IsDate(episode.Name))
+                || _badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
+                || episode.ProviderIds.Count < _pluginConfig.MinimumProviderIds;
+        }
+
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            var config = Plugin.Instance.Configuration;
+            // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
+            var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
+            var imageRefreshMode = MetadataRefreshMode.FullRefresh;
+
+            var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+            {
+                MetadataRefreshMode = metadataRefreshMode,
+                ImageRefreshMode = imageRefreshMode,
+                ReplaceAllImages = _pluginConfig.ReplaceAllImages,
+                ReplaceAllMetadata = _pluginConfig.ReplaceAllMetadata,
+                ForceSave = metadataRefreshMode == MetadataRefreshMode.FullRefresh
+                    || imageRefreshMode == MetadataRefreshMode.FullRefresh
+                    || _pluginConfig.ReplaceAllImages
+                    || _pluginConfig.ReplaceAllMetadata,
+                IsAutomated = false
+            };
 
             // episodes that aired in the past MaxDays days
             DateTime? minPremiereDate = null;
-            var maxDays = config.MaxDays;
+            var maxDays = _pluginConfig.MaxDays;
             if (maxDays > -1 )
             {
                 minPremiereDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
@@ -93,43 +123,13 @@ namespace Jellyfin.Plugin.RefreshSparse
                                     (ItemSortBy.SeriesSortName, SortOrder.Ascending),
                                     (ItemSortBy.SortName, SortOrder.Ascending)
                                 }
-                        }).Cast<Episode>().ToList();
-
-            var badNameList = BadNamesAsArray(config);
-
-            episodes = episodes.Where(i => MinutesSinceRefresh(i) > config.RefreshCooldownMinutes &&
-                ((config.MissingImage && !i.HasImage(ImageType.Primary))
-                || (config.MissingOverview && string.IsNullOrWhiteSpace(i.Overview))
-                || (config.MissingName && string.IsNullOrWhiteSpace(i.Name))
-                || (config.NameIsDate && IsDate(i.Name))
-                || badNameList.Any(en => i.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
-                || i.ProviderIds.Count < config.MinimumProviderIds)).ToList();
-            // DateLastRefreshed - don't hammer metadata provider, won't be new info
-
-            // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
-            var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
-            var imageRefreshMode = MetadataRefreshMode.FullRefresh;
-
-            var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
-            {
-                MetadataRefreshMode = metadataRefreshMode,
-                ImageRefreshMode = imageRefreshMode,
-                ReplaceAllImages = config.ReplaceAllImages,
-                ReplaceAllMetadata = config.ReplaceAllMetadata,
-                ForceSave = metadataRefreshMode == MetadataRefreshMode.FullRefresh
-                    || imageRefreshMode == MetadataRefreshMode.FullRefresh
-                    || config.ReplaceAllImages
-                    || config.ReplaceAllMetadata,
-                IsAutomated = false
-            };
+                        }).Cast<Episode>().Where(i => MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes && NeedsRefresh(i)).ToList();
 
             var numComplete = 0;
-
             var numEpisodes = episodes.Count;
-
             if (numEpisodes > 0)
             {
-                if (config.Pretend)
+                if (_pluginConfig.Pretend)
                 {
                     _logger.LogInformation("Pretending to refresh {X} episodes", numEpisodes);
                 }
@@ -143,17 +143,17 @@ namespace Jellyfin.Plugin.RefreshSparse
                     cancellationToken.ThrowIfCancellationRequested();
                     try
                     {
-                        LogInfo(episode);
+                        _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber:D2}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
+                        LogWhatsMissingInfo(episode);
                         var minutesSinceRefreshed = (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
-                        if (config.RefreshCooldownMinutes > 0 && minutesSinceRefreshed < config.RefreshCooldownMinutes)
+                        if (!_pluginConfig.Pretend)
                         {
-                            _logger.LogInformation("    Skipping refresh: episode was refreshed {X:N0} minutes ago",  minutesSinceRefreshed );
-                        }
-                        else
-                        {
-                            if (!config.Pretend)
+                            await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                            // check if episode will pass or not after refresh
+                            if (NeedsRefresh(episode))
                             {
-                                await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
+                                _logger.LogInformation("{Series} {SeasonNumber}x{EpisodeNumber:D2} will need another refresh", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
+                                LogWhatsMissingInfo(episode);
                             }
                         }
                     }
@@ -180,43 +180,39 @@ namespace Jellyfin.Plugin.RefreshSparse
             }
         }
 
-        private string[] BadNamesAsArray(PluginConfiguration config)
+        private string[] BadNamesAsArray()
         {
-            return config.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
+            return _pluginConfig.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
         }
 
-        private void LogInfo(Episode episode)
+        private void LogWhatsMissingInfo(Episode episode)
         {
-            var config = Plugin.Instance.Configuration;
-            var badNameList = BadNamesAsArray(config);
-
-            _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber:D2}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
-            if (config.MissingImage && !episode.HasImage(ImageType.Primary))
+            if (_pluginConfig.MissingImage && !episode.HasImage(ImageType.Primary))
             {
                 _logger.LogInformation("    Episode missing primary image");
             }
 
-            if (config.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
+            if (_pluginConfig.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
             {
                 _logger.LogInformation("    Episode missing overview");
             }
 
-            if (config.MissingName && string.IsNullOrWhiteSpace(episode.Name))
+            if (_pluginConfig.MissingName && string.IsNullOrWhiteSpace(episode.Name))
             {
                 _logger.LogInformation("    Episode missing name");
             }
 
-            if (config.NameIsDate && IsDate(episode.Name))
+            if (_pluginConfig.NameIsDate && IsDate(episode.Name))
             {
                 _logger.LogInformation("    Episode name is a date");
             }
 
-            if (badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase)))
+            if (_badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase)))
             {
                 _logger.LogInformation("    Episode name matches bad name list");
             }
 
-            if (episode.ProviderIds.Count < config.MinimumProviderIds)
+            if (episode.ProviderIds.Count < _pluginConfig.MinimumProviderIds)
             {
                 _logger.LogInformation("    Episode only has {X} provider IDs.", episode.ProviderIds.Count);
             }
