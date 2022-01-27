@@ -16,6 +16,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             MissingOverview = true;
             NameIsDate = false;
             BadNames = string.Empty;
+            SeriesBlockList = string.Empty;
             Pretend = true;
             RefreshCooldownMinutes = 60;
             // all is being overwritten currently in 10.8 regardless of these settings.
@@ -44,5 +45,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool ReplaceAllImages { get; set; }
 
         public bool ReplaceAllMetadata { get; set; }
+
+        public string SeriesBlockList { get; set; }
     }
 }

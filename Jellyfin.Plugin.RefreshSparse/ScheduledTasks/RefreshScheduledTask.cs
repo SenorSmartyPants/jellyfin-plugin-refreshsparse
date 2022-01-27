@@ -30,6 +30,7 @@ namespace Jellyfin.Plugin.RefreshSparse
         private readonly IFileSystem _fileSystem;
         private readonly PluginConfiguration _pluginConfig;
         private readonly string[] _badNameList;
+        private readonly string[] _seriesBlockList;
 
         public RefreshScheduledTask(
             ILibraryManager libraryManager,
@@ -45,7 +46,8 @@ namespace Jellyfin.Plugin.RefreshSparse
             _fileSystem = fileSystem;
 
             _pluginConfig = Plugin.Instance.Configuration;
-            _badNameList = BadNamesAsArray();
+            _badNameList = SplitToArray(_pluginConfig.BadNames);
+            _seriesBlockList = SplitToArray(_pluginConfig.SeriesBlockList);
         }
 
         public string Name => _localization.GetLocalizedString("Refresh sparse episodes");
@@ -61,6 +63,11 @@ namespace Jellyfin.Plugin.RefreshSparse
         public bool IsEnabled => true;
 
         public bool IsLogged => true;
+
+        private string[] SplitToArray(string stringList)
+        {
+            return stringList.Split("|", StringSplitOptions.RemoveEmptyEntries);
+        }
 
         private bool IsDate(string possibleDate)
         {
@@ -123,7 +130,10 @@ namespace Jellyfin.Plugin.RefreshSparse
                                     (ItemSortBy.SeriesSortName, SortOrder.Ascending),
                                     (ItemSortBy.SortName, SortOrder.Ascending)
                                 }
-                        }).Cast<Episode>().Where(i => MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes && NeedsRefresh(i)).ToList();
+                        }).Cast<Episode>().Where(i => NeedsRefresh(i)
+                            && MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes
+                            && _seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase)))
+                            .ToList();
 
             var numComplete = 0;
             var numEpisodes = episodes.Count;
@@ -178,11 +188,6 @@ namespace Jellyfin.Plugin.RefreshSparse
 
                 _logger.LogInformation("Sparse episode refresh completed");
             }
-        }
-
-        private string[] BadNamesAsArray()
-        {
-            return _pluginConfig.BadNames.Split("|", StringSplitOptions.RemoveEmptyEntries);
         }
 
         private void LogWhatsMissingInfo(Episode episode)

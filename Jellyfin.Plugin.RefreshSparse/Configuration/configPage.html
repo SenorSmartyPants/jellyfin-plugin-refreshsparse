@@ -53,6 +53,11 @@
                         <input id="BadNames" name="BadNames" type="text" is="emby-input" />
                         <div class="fieldDescription">| separated list of placeholder episode names. Example "Episode |TBA"</div>
                     </div>
+                    <div class="inputContainer">
+                        <label class="inputeLabel inputLabelUnfocused" for="SeriesBlockList">Series Block List</label>
+                        <input id="SeriesBlockList" name="SeriesBlockList" type="text" is="emby-input" />
+                        <div class="fieldDescription">| separated list of series not to check</div>
+                    </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
                             <input id="ReplaceAllMetadata" name="ReplaceAllMetadata" type="checkbox" is="emby-checkbox" />
@@ -95,6 +100,7 @@
                         document.querySelector('#MissingOverview').checked = config.MissingOverview;
                         document.querySelector('#NameIsDate').checked = config.NameIsDate;
                         document.querySelector('#BadNames').value = config.BadNames;
+                        document.querySelector('#SeriesBlockList').value = config.SeriesBlockList;
                         document.querySelector('#Pretend').checked = config.Pretend;
                         document.querySelector('#RefreshCooldownMinutes').value = config.RefreshCooldownMinutes;
                         document.querySelector('#ReplaceAllImages').checked = config.ReplaceAllImages;
@@ -114,6 +120,7 @@
                     config.MissingOverview = document.querySelector('#MissingOverview').checked;
                     config.NameIsDate = document.querySelector('#NameIsDate').checked;
                     config.BadNames = document.querySelector('#BadNames').value;
+                    config.SeriesBlockList = document.querySelector('#SeriesBlockList').value;
                     config.Pretend = document.querySelector('#Pretend').checked;
                     config.RefreshCooldownMinutes = document.querySelector('#RefreshCooldownMinutes').value;
                     config.ReplaceAllImages = document.querySelector('#ReplaceAllImages').checked;
