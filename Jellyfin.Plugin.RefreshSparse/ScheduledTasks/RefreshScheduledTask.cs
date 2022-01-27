@@ -28,9 +28,9 @@ namespace Jellyfin.Plugin.RefreshSparse
         private readonly ILogger<RefreshScheduledTask> _logger;
         private readonly ILocalizationManager _localization;
         private readonly IFileSystem _fileSystem;
-        private readonly PluginConfiguration _pluginConfig;
-        private readonly string[] _badNameList;
-        private readonly string[] _seriesBlockList;
+        private PluginConfiguration _pluginConfig;
+        private string[] _badNameList;
+        private string[] _seriesBlockList;
 
         public RefreshScheduledTask(
             ILibraryManager libraryManager,
@@ -92,6 +92,10 @@ namespace Jellyfin.Plugin.RefreshSparse
 
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
+            _pluginConfig = Plugin.Instance.Configuration;
+            _badNameList = SplitToArray(_pluginConfig.BadNames);
+            _seriesBlockList = SplitToArray(_pluginConfig.SeriesBlockList);
+
             // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
             var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
             var imageRefreshMode = MetadataRefreshMode.FullRefresh;
