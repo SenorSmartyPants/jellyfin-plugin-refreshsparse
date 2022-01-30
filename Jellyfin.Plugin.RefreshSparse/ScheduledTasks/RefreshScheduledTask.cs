@@ -114,11 +114,12 @@ namespace Jellyfin.Plugin.RefreshSparse
             };
 
             // episodes that aired in the past MaxDays days
-            DateTime? minPremiereDate = null;
+            // or added to JF in MaxDays
+            DateTime? minDate = null;
             var maxDays = _pluginConfig.MaxDays;
             if (maxDays > -1 )
             {
-                minPremiereDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
+                minDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
             }
 
             List<Episode> episodes =
@@ -128,15 +129,16 @@ namespace Jellyfin.Plugin.RefreshSparse
                             IncludeItemTypes = new[] { "Episode" },
                             IsVirtualItem = false,
                             Recursive = true,
-                            MinPremiereDate = minPremiereDate,
+                            MinDateCreated = minDate,
                             OrderBy = new[]
                                 {
                                     (ItemSortBy.SeriesSortName, SortOrder.Ascending),
                                     (ItemSortBy.SortName, SortOrder.Ascending)
                                 }
-                        }).Cast<Episode>().Where(i => NeedsRefresh(i)
+                        }).Cast<Episode>().Where(i => (maxDays == -1 || i.PremiereDate >= minDate || !i.PremiereDate.HasValue)
                             && MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes
-                            && !_seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase)))
+                            && !_seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase))
+                            && NeedsRefresh(i))
                             .ToList();
 
             var numComplete = 0;
