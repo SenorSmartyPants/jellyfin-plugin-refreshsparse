@@ -90,7 +90,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                 || episode.ProviderIds.Count < _pluginConfig.MinimumProviderIds;
         }
 
-        public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             _pluginConfig = Plugin.Instance.Configuration;
             _badNameList = SplitToArray(_pluginConfig.BadNames);
@@ -126,7 +126,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                 _libraryManager.GetItemList(
                         new InternalItemsQuery
                         {
-                            IncludeItemTypes = new[] { "Episode" },
+                            IncludeItemTypes = new[] { BaseItemKind.Episode },
                             IsVirtualItem = false,
                             Recursive = true,
                             MinDateCreated = minDate,
