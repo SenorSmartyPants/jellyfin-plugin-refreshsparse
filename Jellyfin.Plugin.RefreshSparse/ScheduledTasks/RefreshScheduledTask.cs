@@ -2,33 +2,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.RefreshSparse.Configuration;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
+using static Jellyfin.Plugin.RefreshSparse.Common.Utils;
 
 namespace Jellyfin.Plugin.RefreshSparse
 {
-    public class RefreshScheduledTask : IScheduledTask
+    public class RefreshScheduledTask : BaseRefreshTask, IScheduledTask
     {
-        private readonly ILibraryManager _libraryManager;
-        private readonly IServerConfigurationManager _config;
-        private readonly ILogger<RefreshScheduledTask> _logger;
-        private readonly ILocalizationManager _localization;
-        private readonly IFileSystem _fileSystem;
-        private PluginConfiguration _pluginConfig;
         private string[] _badNameList;
         private string[] _seriesBlockList;
 
@@ -37,202 +29,97 @@ namespace Jellyfin.Plugin.RefreshSparse
             IServerConfigurationManager config,
             ILogger<RefreshScheduledTask> logger,
             ILocalizationManager localization,
-            IFileSystem fileSystem)
+            IFileSystem fileSystem) : base(libraryManager, config, logger, localization, fileSystem)
         {
-            _libraryManager = libraryManager;
-            _config = config;
-            _logger = logger;
-            _localization = localization;
-            _fileSystem = fileSystem;
-
-            _pluginConfig = Plugin.Instance.Configuration;
-            _badNameList = SplitToArray(_pluginConfig.BadNames);
-            _seriesBlockList = SplitToArray(_pluginConfig.SeriesBlockList);
+            _badNameList = SplitToArray(PluginConfig.BadNames);
+            _seriesBlockList = SplitToArray(PluginConfig.SeriesBlockList);
         }
 
-        public string Name => _localization.GetLocalizedString("Refresh sparse episodes");
+        protected override string ItemTypeName => "episodes";
 
-        public string Description => _localization.GetLocalizedString("Refresh episodes with missing metadata based on requirements configured.");
+        public override string Name => Localization.GetLocalizedString("Refresh sparse episodes");
 
-        public string Category => _localization.GetLocalizedString("TasksLibraryCategory");
+        public override string Description => Localization.GetLocalizedString("Refresh episodes with missing metadata based on requirements configured.");
 
-        public string Key => "RefreshSparse";
-
-        public bool IsHidden => false;
-
-        public bool IsEnabled => true;
-
-        public bool IsLogged => true;
-
-        private string[] SplitToArray(string stringList)
+        protected override bool NeedsRefresh(BaseItem item)
         {
-            return stringList.Split("|", StringSplitOptions.RemoveEmptyEntries);
+            return (PluginConfig.MissingImage && !item.HasImage(ImageType.Primary))
+                || (PluginConfig.MissingOverview && string.IsNullOrWhiteSpace(item.Overview))
+                || (PluginConfig.MissingName && string.IsNullOrWhiteSpace(item.Name))
+                || (PluginConfig.NameIsDate && IsDate(item.Name))
+                || _badNameList.Any(en => item.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
+                || item.ProviderIds.Count < PluginConfig.MinimumProviderIds;
         }
 
-        private bool IsDate(string possibleDate)
+        protected override IEnumerable<Episode> GetItems()
         {
-            DateTime d;
-            return DateTime.TryParse(possibleDate, out d);
-        }
-
-        private double MinutesSinceRefresh(Episode episode)
-        {
-            return (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
-        }
-
-        private bool NeedsRefresh(Episode episode)
-        {
-            return (_pluginConfig.MissingImage && !episode.HasImage(ImageType.Primary))
-                || (_pluginConfig.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
-                || (_pluginConfig.MissingName && string.IsNullOrWhiteSpace(episode.Name))
-                || (_pluginConfig.NameIsDate && IsDate(episode.Name))
-                || _badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase))
-                || episode.ProviderIds.Count < _pluginConfig.MinimumProviderIds;
-        }
-
-        public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-        {
-            _pluginConfig = Plugin.Instance.Configuration;
-            _badNameList = SplitToArray(_pluginConfig.BadNames);
-            _seriesBlockList = SplitToArray(_pluginConfig.SeriesBlockList);
-
-            // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
-            var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
-            var imageRefreshMode = MetadataRefreshMode.FullRefresh;
-
-            var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
-            {
-                MetadataRefreshMode = metadataRefreshMode,
-                ImageRefreshMode = imageRefreshMode,
-                ReplaceAllImages = _pluginConfig.ReplaceAllImages,
-                ReplaceAllMetadata = _pluginConfig.ReplaceAllMetadata,
-                ForceSave = metadataRefreshMode == MetadataRefreshMode.FullRefresh
-                    || imageRefreshMode == MetadataRefreshMode.FullRefresh
-                    || _pluginConfig.ReplaceAllImages
-                    || _pluginConfig.ReplaceAllMetadata,
-                IsAutomated = false
-            };
+            _badNameList = SplitToArray(PluginConfig.BadNames);
+            _seriesBlockList = SplitToArray(PluginConfig.SeriesBlockList);
 
             // episodes that aired in the past MaxDays days
             // or added to JF in MaxDays
             DateTime? minDate = null;
-            var maxDays = _pluginConfig.MaxDays;
-            if (maxDays > -1 )
+            var maxDays = PluginConfig.MaxDays;
+            if (maxDays > -1)
             {
                 minDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
             }
 
-            List<Episode> episodes =
-                _libraryManager.GetItemList(
-                        new InternalItemsQuery
+            return LibraryManager.GetItemList(
+                new InternalItemsQuery
+                {
+                    IncludeItemTypes = new[] { BaseItemKind.Episode },
+                    IsVirtualItem = false,
+                    Recursive = true,
+                    MinDateCreated = minDate,
+                    OrderBy = new[]
                         {
-                            IncludeItemTypes = new[] { BaseItemKind.Episode },
-                            IsVirtualItem = false,
-                            Recursive = true,
-                            MinDateCreated = minDate,
-                            OrderBy = new[]
-                                {
-                                    (ItemSortBy.SeriesSortName, SortOrder.Ascending),
-                                    (ItemSortBy.SortName, SortOrder.Ascending)
-                                }
-                        }).Cast<Episode>().Where(i => (maxDays == -1 || i.PremiereDate >= minDate || !i.PremiereDate.HasValue)
-                            && MinutesSinceRefresh(i) > _pluginConfig.RefreshCooldownMinutes
-                            && !_seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase))
-                            && NeedsRefresh(i))
-                            .ToList();
-
-            var numComplete = 0;
-            var numEpisodes = episodes.Count;
-            if (numEpisodes > 0)
-            {
-                if (_pluginConfig.Pretend)
-                {
-                    _logger.LogInformation("Pretending to refresh {X} episodes", numEpisodes);
-                }
-                else
-                {
-                    _logger.LogInformation("Will refresh {X} episodes", numEpisodes);
-                }
-
-                foreach (Episode episode in episodes)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    try
-                    {
-                        _logger.LogInformation("Refreshing {Series} {SeasonNumber}x{EpisodeNumber:D2}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
-                        LogWhatsMissingInfo(episode);
-                        var minutesSinceRefreshed = (DateTime.UtcNow - episode.DateLastRefreshed).TotalMinutes;
-                        if (!_pluginConfig.Pretend)
-                        {
-                            await episode.RefreshMetadata(refreshOptions, cancellationToken).ConfigureAwait(false);
-                            // check if episode will pass or not after refresh
-                            if (NeedsRefresh(episode))
-                            {
-                                _logger.LogInformation("{Series} {SeasonNumber}x{EpisodeNumber:D2} will need another refresh", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
-                                LogWhatsMissingInfo(episode);
-                            }
+                            (ItemSortBy.SeriesSortName, SortOrder.Ascending),
+                            (ItemSortBy.SortName, SortOrder.Ascending)
                         }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch (System.Exception)
-                    {
-                        throw;
-                    }
+                }).Cast<Episode>().Where(i => (maxDays == -1 || i.PremiereDate >= minDate || !i.PremiereDate.HasValue)
+                    && MinutesSinceRefresh(i) > PluginConfig.RefreshCooldownMinutes
+                    && !_seriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase))
+                    && NeedsRefresh(i));
+        }
 
-                    // Update progress
-                    numComplete++;
-                    double percent = numComplete;
-                    percent /= numEpisodes;
+        protected override void LogWhatsMissingInfo(BaseItem item)
+        {
+            if (PluginConfig.MissingImage && !item.HasImage(ImageType.Primary))
+            {
+                Logger.LogInformation("    Episode missing primary image");
+            }
 
-                    progress.Report(100 * percent);
-                }
+            if (PluginConfig.MissingOverview && string.IsNullOrWhiteSpace(item.Overview))
+            {
+                Logger.LogInformation("    Episode missing overview");
+            }
 
-                progress.Report(100);
+            if (PluginConfig.MissingName && string.IsNullOrWhiteSpace(item.Name))
+            {
+                Logger.LogInformation("    Episode missing name");
+            }
 
-                _logger.LogInformation("Sparse episode refresh completed");
+            if (PluginConfig.NameIsDate && IsDate(item.Name))
+            {
+                Logger.LogInformation("    Episode name is a date");
+            }
+
+            if (_badNameList.Any(en => item.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                Logger.LogInformation("    Episode name matches bad name list");
+            }
+
+            if (item.ProviderIds.Count < PluginConfig.MinimumProviderIds)
+            {
+                Logger.LogInformation("    Episode only has {X} provider IDs.", item.ProviderIds.Count);
             }
         }
 
-        private void LogWhatsMissingInfo(Episode episode)
+        public override string GetItemName(BaseItem item)
         {
-            if (_pluginConfig.MissingImage && !episode.HasImage(ImageType.Primary))
-            {
-                _logger.LogInformation("    Episode missing primary image");
-            }
-
-            if (_pluginConfig.MissingOverview && string.IsNullOrWhiteSpace(episode.Overview))
-            {
-                _logger.LogInformation("    Episode missing overview");
-            }
-
-            if (_pluginConfig.MissingName && string.IsNullOrWhiteSpace(episode.Name))
-            {
-                _logger.LogInformation("    Episode missing name");
-            }
-
-            if (_pluginConfig.NameIsDate && IsDate(episode.Name))
-            {
-                _logger.LogInformation("    Episode name is a date");
-            }
-
-            if (_badNameList.Any(en => episode.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase)))
-            {
-                _logger.LogInformation("    Episode name matches bad name list");
-            }
-
-            if (episode.ProviderIds.Count < _pluginConfig.MinimumProviderIds)
-            {
-                _logger.LogInformation("    Episode only has {X} provider IDs.", episode.ProviderIds.Count);
-            }
-        }
-
-        public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        {
-            // no default schedule
-            return Array.Empty<TaskTriggerInfo>();
+            Episode episode = (Episode)item;
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1}x{2:D2}", episode.SeriesName, episode.ParentIndexNumber, episode.IndexNumber);
         }
     }
 }
