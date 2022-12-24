@@ -28,7 +28,7 @@ namespace Jellyfin.Plugin.RefreshSparse
         }
 
         /// <inheritdoc />
-        public override string Name => "Refresh Sparse Metadata";
+        public override string Name => "Refresh Sparse Items";
 
         /// <inheritdoc />
         public override Guid Id => Guid.Parse("12b44f20-6cfb-4be5-9950-3d0fbe74fa35");
