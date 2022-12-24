@@ -10,10 +10,12 @@ using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
+using static Jellyfin.Plugin.RefreshSparse.Common.Utils;
 
 namespace Jellyfin.Plugin.RefreshSparse
 {
@@ -75,6 +77,8 @@ namespace Jellyfin.Plugin.RefreshSparse
 
         public bool IsLogged => true;
 
+        protected IEnumerable<string> SeriesBlockList => SplitToArray(_pluginConfig.SeriesBlockList);
+
         protected abstract bool NeedsRefresh(BaseItem item);
 
         protected abstract IEnumerable<BaseItem> GetItems();
@@ -85,24 +89,7 @@ namespace Jellyfin.Plugin.RefreshSparse
         {
             _pluginConfig = Plugin.Instance.Configuration;
 
-            // when called from item refresh metadata menu, these are always full. Unless scan for only new/updated files
-            var metadataRefreshMode = MetadataRefreshMode.FullRefresh;
-            var imageRefreshMode = MetadataRefreshMode.FullRefresh;
-
-            // TODO: replace all for each type series/episode
-
-            var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
-            {
-                MetadataRefreshMode = metadataRefreshMode,
-                ImageRefreshMode = imageRefreshMode,
-                ReplaceAllImages = _pluginConfig.ReplaceAllImages,
-                ReplaceAllMetadata = _pluginConfig.ReplaceAllMetadata,
-                ForceSave = metadataRefreshMode == MetadataRefreshMode.FullRefresh
-                    || imageRefreshMode == MetadataRefreshMode.FullRefresh
-                    || _pluginConfig.ReplaceAllImages
-                    || _pluginConfig.ReplaceAllMetadata,
-                IsAutomated = false
-            };
+            var refreshOptions = GetMetadataRefreshOptions();
 
             var items = GetItems();
 
@@ -110,14 +97,7 @@ namespace Jellyfin.Plugin.RefreshSparse
             var numItems = items.Count();
             if (numItems > 0)
             {
-                if (_pluginConfig.Pretend)
-                {
-                    _logger.LogInformation("Pretending to refresh {X} {Item}", numItems, ItemTypeName);
-                }
-                else
-                {
-                    _logger.LogInformation("Will refresh {X} {Item}", numItems, ItemTypeName);
-                }
+                _logger.LogInformation("{Prefix} refresh {X} {Item}", _pluginConfig.Pretend ? "Pretending to" : "Will", numItems, ItemTypeName);
 
                 foreach (var item in items)
                 {
@@ -125,6 +105,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                     try
                     {
                         _logger.LogInformation("Refreshing {Name} ", GetItemName(item));
+                        _logger.LogInformation("    hasn't been refreshed in {0:0} days", DaysSinceRefresh(item));
                         LogWhatsMissingInfo(item);
                         if (!_pluginConfig.Pretend)
                         {
@@ -160,9 +141,42 @@ namespace Jellyfin.Plugin.RefreshSparse
             }
         }
 
-        public virtual string GetItemName(BaseItem item)
+        private MetadataRefreshOptions GetMetadataRefreshOptions()
+        {
+            // when called from item refresh metadata menu, these are always FullRefresh. Unless scan for only new/updated files
+            var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+            {
+                MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
+                ImageRefreshMode = MetadataRefreshMode.FullRefresh,
+                ForceSave = true
+            };
+
+            refreshOptions.ReplaceAllImages = GetReplaceAllImages();
+            refreshOptions.ReplaceAllMetadata = GetReplaceAllMetadata();
+
+            return refreshOptions;
+        }
+
+        protected abstract bool GetReplaceAllImages();
+
+        protected abstract bool GetReplaceAllMetadata();
+
+        protected virtual string GetItemName(BaseItem item)
         {
             return item.Name;
+        }
+
+        protected bool MissingImage(BaseItem item, ImageType imageType, bool performCheck)
+        {
+            return performCheck && !item.HasImage(imageType);
+        }
+
+        protected void LogMissingProviders(BaseItem item)
+        {
+            Logger.LogInformation(
+                "    only has {X} provider IDs. {List}",
+                item.ProviderIds.Count,
+                item.ProviderIds.Count > 0 ? string.Join(',', item.ProviderIds.Keys) : string.Empty);
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
