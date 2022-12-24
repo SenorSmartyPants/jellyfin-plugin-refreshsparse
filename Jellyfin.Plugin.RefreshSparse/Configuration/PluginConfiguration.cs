@@ -37,6 +37,16 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             SeriesReplaceAllImages = false;
             SeriesReplaceAllMetadata = false;
 
+            // season defaults
+            SeasonMinimumProviderIds = 0;
+            SeasonOverview = true;
+            SeasonName = false;
+            SeasonPrimary = true;
+            SeasonBanner = false;
+            SeasonThumb = false;
+            SeasonBackdrop = false;
+            SeasonReplaceAllImages = false;
+            SeasonReplaceAllMetadata = false;
         }
 
         public int MaxDays { get; set; }
@@ -87,5 +97,24 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool SeriesReplaceAllImages { get; set; }
 
         public bool SeriesReplaceAllMetadata { get; set; }
+
+        // Season settings
+        public int SeasonMinimumProviderIds { get; set; }
+
+        public bool SeasonOverview { get; set; }
+
+        public bool SeasonName { get; set; }
+
+        public bool SeasonPrimary { get; set; }
+
+        public bool SeasonBanner { get; set; }
+
+        public bool SeasonThumb { get; set; }
+
+        public bool SeasonBackdrop { get; set; }
+
+        public bool SeasonReplaceAllImages { get; set; }
+
+        public bool SeasonReplaceAllMetadata { get; set; }
     }
 }

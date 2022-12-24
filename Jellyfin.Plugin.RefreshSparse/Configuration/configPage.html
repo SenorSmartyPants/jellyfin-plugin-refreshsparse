@@ -168,6 +168,66 @@
                         </div>
                     </fieldset>
 
+                    <fieldset class="verticalSection verticalSection-extrabottompadding">
+                        <legend>
+                            <h3>Seasons</h3>
+                        </legend>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SeasonMinimumProviderIds">Minimum provider IDs</label>
+                            <input id="SeasonMinimumProviderIds" name="SeasonMinimumProviderIds" type="number" is="emby-input" min="0" />
+                            <div class="fieldDescription">Minimum number of external provider IDs</div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeasonOverview" name="SeasonOverview" type="checkbox" is="emby-checkbox" />
+                                <span>Missing overview</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeasonName" name="SeasonName" type="checkbox" is="emby-checkbox" />
+                                <span>Missing name. Most seasons are not named.</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <h3 class="checkboxListLabel">Missing Images</h3>
+                            <div class="paperList checkboxList checkboxList-paperList" id="SeasonImagesList">
+                                <label class="emby-checkbox-label">
+                                    <input id="SeasonPrimary" name="SeasonPrimary" type="checkbox" is="emby-checkbox" />
+                                    <span>Primary</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeasonBanner" name="SeasonBanner" type="checkbox" is="emby-checkbox" />
+                                    <span>Banner</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeasonThumb" name="SeasonThumb" type="checkbox" is="emby-checkbox" />
+                                    <span>Thumb</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeasonBackdrop" name="SeasonBackdrop" type="checkbox" is="emby-checkbox" />
+                                    <span>Backdrop</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeasonReplaceAllMetadata" name="SeasonReplaceAllMetadata" type="checkbox" is="emby-checkbox" />
+                                <span>Replace all metadata</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeasonReplaceAllImages" name="SeasonReplaceAllImages" type="checkbox" is="emby-checkbox" />
+                                <span>Replace all images</span>
+                            </label>
+                        </div>
+                    </fieldset>
 
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
@@ -218,6 +278,19 @@
                         document.querySelector('#SeriesReplaceAllImages').checked = config.SeriesReplaceAllImages;
                         document.querySelector('#SeriesReplaceAllMetadata').checked = config.SeriesReplaceAllMetadata;
 
+                        // seasons
+                        document.querySelector('#SeasonMinimumProviderIds').value = config.SeasonMinimumProviderIds;
+                        document.querySelector('#SeasonOverview').checked = config.SeasonOverview;
+                        document.querySelector('#SeasonName').checked = config.SeasonName;
+
+                        document.querySelector('#SeasonPrimary').checked = config.SeasonPrimary;
+                        document.querySelector('#SeasonBanner').checked = config.SeasonBanner;
+                        document.querySelector('#SeasonThumb').checked = config.SeasonThumb;
+                        document.querySelector('#SeasonBackdrop').checked = config.SeasonBackdrop;
+
+                        document.querySelector('#SeasonReplaceAllImages').checked = config.SeasonReplaceAllImages;
+                        document.querySelector('#SeasonReplaceAllMetadata').checked = config.SeasonReplaceAllMetadata;
+
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -257,6 +330,19 @@
 
                     config.SeriesReplaceAllImages = document.querySelector('#SeriesReplaceAllImages').checked;
                     config.SeriesReplaceAllMetadata = document.querySelector('#SeriesReplaceAllMetadata').checked;
+
+                    // season
+                    config.SeasonMinimumProviderIds = document.querySelector('#SeasonMinimumProviderIds').value;
+                    config.SeasonOverview = document.querySelector('#SeasonOverview').checked;
+                    config.SeasonName = document.querySelector('#SeasonName').checked;
+
+                    config.SeasonPrimary = document.querySelector('#SeasonPrimary').checked;
+                    config.SeasonBanner = document.querySelector('#SeasonBanner').checked;
+                    config.SeasonThumb = document.querySelector('#SeasonThumb').checked;
+                    config.SeasonBackdrop = document.querySelector('#SeasonBackdrop').checked;
+
+                    config.SeasonReplaceAllImages = document.querySelector('#SeasonReplaceAllImages').checked;
+                    config.SeasonReplaceAllMetadata = document.querySelector('#SeasonReplaceAllMetadata').checked;
 
                     ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
