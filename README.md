@@ -32,7 +32,9 @@ Pretend option to try it out without updating metadata.
 
 ## Installation
 
-[See the official documentation for install instructions](https://jellyfin.org/docs/general/server/plugins/index.html#installing).
+Add [this link][1] to "Repositories" in Jellyfin settings.
+
+[1]: https://raw.githubusercontent.com/SenorSmartyPants/jellyfin-plugin-refreshsparse/master/manifest.json
 
 ## Build
 

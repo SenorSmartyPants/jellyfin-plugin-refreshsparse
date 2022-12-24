@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "12b44f20-6cfb-4be5-9950-3d0fbe74fa35",
+        "name": "Refresh Sparse Items",
+        "description": "Refresh episodes, seasons, series that are missing data you define.\n",
+        "overview": "Refresh episodes, seasons, series that are missing data you define.",
+        "owner": "SenorSmartyPants",
+        "category": "Metadata",
+        "versions": [
+            {
+                "version": "3.0.0.0",
+                "changelog": "Added Series and Season refreshing.\nOption to check for bad names in episode overview.\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/SenorSmartyPants/jellyfin-plugin-refreshsparse/releases/download/v3.0.0.0/refreshsparse_3.0.0.0.zip",
+                "checksum": "b63877dc16d68e96992b1b6640a87832",
+                "timestamp": "2022-12-24T19:10:17Z"
+            }
+        ]
+    }
+]
