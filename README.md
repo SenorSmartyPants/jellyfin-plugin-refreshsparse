@@ -3,7 +3,7 @@
 
 <p align="center">
 <a href="https://github.com/SenorSmartyPants/jellyfin-plugin-refreshsparse/actions/workflows/build-dotnet.yml">
-<img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/SenorSmartyPants/jellyfin-plugin-refreshsparse/Build%20Plugin.svg">
+<img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/SenorSmartyPants/jellyfin-plugin-refreshsparse/build-dotnet.yml">
 </a>
 <a href="https://github.com/SenorSmartyPants/jellyfin-plugin-refreshsparse">
 <img alt="GPLv3 License" src="https://img.shields.io/github/license/SenorSmartyPants/jellyfin-plugin-refreshsparse.svg"/>
