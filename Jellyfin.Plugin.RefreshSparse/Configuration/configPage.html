@@ -100,6 +100,73 @@
                         </div>
                     </fieldset>
 
+                    <fieldset class="verticalSection">
+                        <legend>
+                            <h3>Series</h3>
+                        </legend>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SeriesStatusDays">Status</label>
+                            <input id="SeriesStatusDays" name="SeriesStatusDays" type="number" is="emby-input" min="-1" />
+                            <div class="fieldDescription">Check every X days if continuing series has ended. -1 to disable and never check.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SeriesMinimumProviderIds">Minimum provider IDs</label>
+                            <input id="SeriesMinimumProviderIds" name="SeriesMinimumProviderIds" type="number" is="emby-input" min="0" />
+                            <div class="fieldDescription">Minimum number of external provider IDs</div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeriesOverview" name="SeriesOverview" type="checkbox" is="emby-checkbox" />
+                                <span>Missing overview</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <h3 class="checkboxListLabel">Missing Images</h3>
+                            <div class="paperList checkboxList checkboxList-paperList" id="SeriesImagesList">
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesPrimary" name="SeriesPrimary" type="checkbox" is="emby-checkbox" />
+                                    <span>Primary</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesArt" name="SeriesArt" type="checkbox" is="emby-checkbox" />
+                                    <span>Clearart</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesBanner" name="SeriesBanner" type="checkbox" is="emby-checkbox" />
+                                    <span>Banner</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesLogo" name="SeriesLogo" type="checkbox" is="emby-checkbox" />
+                                    <span>Logo</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesThumb" name="SeriesThumb" type="checkbox" is="emby-checkbox" />
+                                    <span>Thumb</span>
+                                </label>
+                                <label class="emby-checkbox-label">
+                                    <input id="SeriesBackdrop" name="SeriesBackdrop" type="checkbox" is="emby-checkbox" />
+                                    <span>Backdrop</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeriesReplaceAllMetadata" name="SeriesReplaceAllMetadata" type="checkbox" is="emby-checkbox" />
+                                <span>Replace all metadata</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="SeriesReplaceAllImages" name="SeriesReplaceAllImages" type="checkbox" is="emby-checkbox" />
+                                <span>Replace all images</span>
+                            </label>
+                        </div>
+                    </fieldset>
 
 
                     <div>
@@ -135,6 +202,22 @@
                         document.querySelector('#RefreshCooldownMinutes').value = config.RefreshCooldownMinutes;
                         document.querySelector('#ReplaceAllImages').checked = config.ReplaceAllImages;
                         document.querySelector('#ReplaceAllMetadata').checked = config.ReplaceAllMetadata;
+
+                        // series
+                        document.querySelector('#SeriesStatusDays').value = config.SeriesStatusDays;
+                        document.querySelector('#SeriesMinimumProviderIds').value = config.SeriesMinimumProviderIds;
+                        document.querySelector('#SeriesOverview').checked = config.SeriesOverview;
+
+                        document.querySelector('#SeriesPrimary').checked = config.SeriesPrimary;
+                        document.querySelector('#SeriesArt').checked = config.SeriesArt;
+                        document.querySelector('#SeriesBanner').checked = config.SeriesBanner;
+                        document.querySelector('#SeriesLogo').checked = config.SeriesLogo;
+                        document.querySelector('#SeriesThumb').checked = config.SeriesThumb;
+                        document.querySelector('#SeriesBackdrop').checked = config.SeriesBackdrop;
+
+                        document.querySelector('#SeriesReplaceAllImages').checked = config.SeriesReplaceAllImages;
+                        document.querySelector('#SeriesReplaceAllMetadata').checked = config.SeriesReplaceAllMetadata;
+
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -159,6 +242,22 @@
                     config.RefreshCooldownMinutes = document.querySelector('#RefreshCooldownMinutes').value;
                     config.ReplaceAllImages = document.querySelector('#ReplaceAllImages').checked;
                     config.ReplaceAllMetadata = document.querySelector('#ReplaceAllMetadata').checked;
+
+                    // series
+                    config.SeriesStatusDays = document.querySelector('#SeriesStatusDays').value;
+                    config.SeriesMinimumProviderIds = document.querySelector('#SeriesMinimumProviderIds').value;
+                    config.SeriesOverview = document.querySelector('#SeriesOverview').checked;
+
+                    config.SeriesPrimary = document.querySelector('#SeriesPrimary').checked;
+                    config.SeriesArt = document.querySelector('#SeriesArt').checked;
+                    config.SeriesBanner = document.querySelector('#SeriesBanner').checked;
+                    config.SeriesLogo = document.querySelector('#SeriesLogo').checked;
+                    config.SeriesThumb = document.querySelector('#SeriesThumb').checked;
+                    config.SeriesBackdrop = document.querySelector('#SeriesBackdrop').checked;
+
+                    config.SeriesReplaceAllImages = document.querySelector('#SeriesReplaceAllImages').checked;
+                    config.SeriesReplaceAllMetadata = document.querySelector('#SeriesReplaceAllMetadata').checked;
+
                     ApiClient.updatePluginConfiguration(RefreshSparseConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

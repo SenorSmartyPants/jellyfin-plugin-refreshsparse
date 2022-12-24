@@ -23,6 +23,20 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             // all is being overwritten currently in 10.8 regardless of these settings.
             ReplaceAllImages = false;
             ReplaceAllMetadata = false;
+
+            // series defaults
+            SeriesStatusDays = 180;
+            SeriesMinimumProviderIds = 0;
+            SeriesOverview = true;
+            SeriesPrimary = true;
+            SeriesArt = false;
+            SeriesBanner = false;
+            SeriesLogo = false;
+            SeriesThumb = false;
+            SeriesBackdrop = true;
+            SeriesReplaceAllImages = false;
+            SeriesReplaceAllMetadata = false;
+
         }
 
         public int MaxDays { get; set; }
@@ -50,5 +64,28 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool ReplaceAllMetadata { get; set; }
 
         public string SeriesBlockList { get; set; }
+
+        // Series settings
+        public int SeriesStatusDays { get; set; }
+
+        public int SeriesMinimumProviderIds { get; set; }
+
+        public bool SeriesOverview { get; set; }
+
+        public bool SeriesPrimary { get; set; }
+
+        public bool SeriesArt { get; set; }
+
+        public bool SeriesBanner { get; set; }
+
+        public bool SeriesLogo { get; set; }
+
+        public bool SeriesThumb { get; set; }
+
+        public bool SeriesBackdrop { get; set; }
+
+        public bool SeriesReplaceAllImages { get; set; }
+
+        public bool SeriesReplaceAllMetadata { get; set; }
     }
 }

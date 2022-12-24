@@ -67,7 +67,7 @@ namespace Jellyfin.Plugin.RefreshSparse
             get;
         }
 
-        public string Category => _localization.GetLocalizedString("TasksLibraryCategory");
+        public string Category => _localization.GetLocalizedString("Sparse Items");
 
         public string Key => "RefreshSparse";
 
