@@ -16,6 +16,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             MissingOverview = true;
             NameIsDate = false;
             BadNames = string.Empty;
+            OverviewBadName = false;
             SeriesBlockList = string.Empty;
             Pretend = true;
             RefreshCooldownMinutes = 60;
@@ -37,6 +38,8 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool NameIsDate { get; set; }
 
         public string BadNames { get; set; }
+
+        public bool OverviewBadName { get; set; }
 
         public bool Pretend { get; set; }
 

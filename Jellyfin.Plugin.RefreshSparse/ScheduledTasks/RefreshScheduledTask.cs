@@ -82,6 +82,11 @@ namespace Jellyfin.Plugin.RefreshSparse
                 Logger.LogInformation("    missing overview");
             }
 
+            if (OverviewBadName(item))
+            {
+                Logger.LogInformation("    overview contains a bad name");
+            }
+
             if (MissingName(item))
             {
                 Logger.LogInformation("    missing name");
@@ -110,6 +115,7 @@ namespace Jellyfin.Plugin.RefreshSparse
                 || MissingName(item)
                 || NameIsDate(item)
                 || BadName(item)
+                || OverviewBadName(item)
                 || MissingImage(item, ImageType.Primary, PluginConfig.MissingImage);
         }
 
@@ -141,6 +147,11 @@ namespace Jellyfin.Plugin.RefreshSparse
         private bool BadName(BaseItem item)
         {
             return _badNameList.Any(en => item.Name is not null && item.Name.StartsWith(en, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        private bool OverviewBadName(BaseItem item)
+        {
+            return PluginConfig.OverviewBadName && _badNameList.Any(en => item.Overview is not null && item.Overview.Contains(en, StringComparison.CurrentCultureIgnoreCase));
         }
 
         protected override string GetItemName(BaseItem item)
