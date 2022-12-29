@@ -38,31 +38,18 @@ namespace Jellyfin.Plugin.RefreshSparse
 
         protected override IEnumerable<Season> GetItems()
         {
-            // episodes that aired in the past MaxDays days
-            // or added to JF in MaxDays
-            DateTime? minDate = null;
-            var maxDays = PluginConfig.MaxDays;
-            if (maxDays > -1 )
-            {
-                minDate = DateTime.UtcNow.Date.AddDays(-(double)maxDays);
-            }
-
-            // todo mindatecreated? don't care, just time since last refresh?
-            // minutes since refresh?
             return LibraryManager.GetItemList(
                 new InternalItemsQuery
                 {
                     IncludeItemTypes = new[] { BaseItemKind.Season },
                     IsVirtualItem = false,
                     Recursive = true,
-                    MinDateCreated = minDate,
                     OrderBy = new[]
                         {
                             (ItemSortBy.SeriesSortName, SortOrder.Ascending),
                             (ItemSortBy.SortName, SortOrder.Ascending)
                         }
-                }).Cast<Season>().Where(i => (maxDays == -1 || i.PremiereDate >= minDate || !i.PremiereDate.HasValue)
-                    && MinutesSinceRefresh(i) > PluginConfig.RefreshCooldownMinutes
+                }).Cast<Season>().Where(i => DaysSinceRefresh(i) > PluginConfig.SeasonCooldownDays
                     && !SeriesBlockList.Any(sbl => i.SeriesName.Equals(sbl, StringComparison.OrdinalIgnoreCase))
                     && NeedsRefresh(i));
         }

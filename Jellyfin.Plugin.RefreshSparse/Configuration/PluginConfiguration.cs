@@ -25,6 +25,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             ReplaceAllMetadata = false;
 
             // series defaults
+            SeriesCooldownDays = 30;
             SeriesStatusDays = 180;
             SeriesMinimumProviderIds = 0;
             SeriesOverview = true;
@@ -38,6 +39,7 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
             SeriesReplaceAllMetadata = false;
 
             // season defaults
+            SeasonCooldownDays = 30;
             SeasonMinimumProviderIds = 0;
             SeasonOverview = true;
             SeasonName = false;
@@ -76,6 +78,8 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public string SeriesBlockList { get; set; }
 
         // Series settings
+        public int SeriesCooldownDays { get; set; }
+
         public int SeriesStatusDays { get; set; }
 
         public int SeriesMinimumProviderIds { get; set; }
@@ -99,6 +103,8 @@ namespace Jellyfin.Plugin.RefreshSparse.Configuration
         public bool SeriesReplaceAllMetadata { get; set; }
 
         // Season settings
+        public int SeasonCooldownDays { get; set; }
+
         public int SeasonMinimumProviderIds { get; set; }
 
         public bool SeasonOverview { get; set; }

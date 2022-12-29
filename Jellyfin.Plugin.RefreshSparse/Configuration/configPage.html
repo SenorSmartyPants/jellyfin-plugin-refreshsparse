@@ -106,6 +106,12 @@
                         </legend>
 
                         <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SeriesCooldownDays">Refresh cooldown</label>
+                            <input id="SeriesCooldownDays" name="SeriesCooldownDays" type="number" is="emby-input" min="-1" />
+                            <div class="fieldDescription">Don't refresh series if already refreshed within X <b>Days</b>. -1 to disable</div>
+                        </div>
+
+                        <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="SeriesStatusDays">Status</label>
                             <input id="SeriesStatusDays" name="SeriesStatusDays" type="number" is="emby-input" min="-1" />
                             <div class="fieldDescription">Check every X days if continuing series has ended. -1 to disable and never check.
@@ -172,6 +178,12 @@
                         <legend>
                             <h3>Seasons</h3>
                         </legend>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SeasonCooldownDays">Refresh cooldown</label>
+                            <input id="SeasonCooldownDays" name="SeasonCooldownDays" type="number" is="emby-input" min="-1" />
+                            <div class="fieldDescription">Don't refresh season if already refreshed within X <b>Days</b>. -1 to disable</div>
+                        </div>
 
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="SeasonMinimumProviderIds">Minimum provider IDs</label>
@@ -275,6 +287,7 @@
                         document.querySelector('#SeriesThumb').checked = config.SeriesThumb;
                         document.querySelector('#SeriesBackdrop').checked = config.SeriesBackdrop;
 
+                        document.querySelector('#SeriesCooldownDays').value = config.SeriesCooldownDays;
                         document.querySelector('#SeriesReplaceAllImages').checked = config.SeriesReplaceAllImages;
                         document.querySelector('#SeriesReplaceAllMetadata').checked = config.SeriesReplaceAllMetadata;
 
@@ -288,6 +301,7 @@
                         document.querySelector('#SeasonThumb').checked = config.SeasonThumb;
                         document.querySelector('#SeasonBackdrop').checked = config.SeasonBackdrop;
 
+                        document.querySelector('#SeasonCooldownDays').value = config.SeasonCooldownDays;
                         document.querySelector('#SeasonReplaceAllImages').checked = config.SeasonReplaceAllImages;
                         document.querySelector('#SeasonReplaceAllMetadata').checked = config.SeasonReplaceAllMetadata;
 
@@ -328,6 +342,7 @@
                     config.SeriesThumb = document.querySelector('#SeriesThumb').checked;
                     config.SeriesBackdrop = document.querySelector('#SeriesBackdrop').checked;
 
+                    config.SeriesCooldownDays = document.querySelector('#SeriesCooldownDays').value;
                     config.SeriesReplaceAllImages = document.querySelector('#SeriesReplaceAllImages').checked;
                     config.SeriesReplaceAllMetadata = document.querySelector('#SeriesReplaceAllMetadata').checked;
 
@@ -341,6 +356,7 @@
                     config.SeasonThumb = document.querySelector('#SeasonThumb').checked;
                     config.SeasonBackdrop = document.querySelector('#SeasonBackdrop').checked;
 
+                    config.SeasonCooldownDays = document.querySelector('#SeasonCooldownDays').value;
                     config.SeasonReplaceAllImages = document.querySelector('#SeasonReplaceAllImages').checked;
                     config.SeasonReplaceAllMetadata = document.querySelector('#SeasonReplaceAllMetadata').checked;
 
