@@ -17,15 +17,15 @@ jobs:
           fetch-depth: 0
       -
         name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.x
       -
         name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
         id: jprm
         with:
-          dotnet-target: net6.0
+          dotnet-target: net8.0
       -
         name: Prepare Release Checksums
         run: |-
