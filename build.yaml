@@ -1,7 +1,7 @@
 ---
 name: "RefreshSparse"
 guid: "12b44f20-6cfb-4be5-9950-3d0fbe74fa35"
-version: "3.1.0.0"
+version: "4.0.0.0"
 targetAbi: "10.9.0.0"
 framework: "net8.0"
 overview: "Refresh episodes based on (missing) metadata"
