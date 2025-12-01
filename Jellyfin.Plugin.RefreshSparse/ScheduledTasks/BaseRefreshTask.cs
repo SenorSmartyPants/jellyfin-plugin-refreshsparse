@@ -123,9 +123,16 @@ namespace Jellyfin.Plugin.RefreshSparse
                     {
                         throw;
                     }
-                    catch (System.Exception)
+                    catch (System.Exception ex)
                     {
-                        throw;
+                        if (ex.ToString().Contains("database table is locked", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogError(ex, "Database lock detected while refreshing {Name}. Skipping item.", GetItemName(item));
+                        }
+                        else
+                        {
+                            throw;
+                        }
                     }
 
                     // Update progress
