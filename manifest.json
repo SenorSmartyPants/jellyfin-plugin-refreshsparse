@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "5.0.0.0",
+                "changelog": "Jellyfin 10.11 support\n",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/SenorSmartyPants/jellyfin-plugin-refreshsparse/releases/download/v5.0.0.0/refreshsparse_5.0.0.0.zip",
+                "checksum": "376221bb34c24ddffa38855cf57e783d",
+                "timestamp": "2026-02-04T00:00:00Z"
+            },
+            {
                 "version": "4.0.0.0",
                 "changelog": "Jellyfin 10.9 support\n",
                 "targetAbi": "10.9.0.0",
