@@ -32,9 +32,10 @@ jobs:
           dotnet-target: net9.0
       -
         name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build-artifact
+          pattern: build-artifact-*
+          merge-multiple: true
           retention-days: 30
           if-no-files-found: error
           path: ${{ steps.jprm.outputs.artifact }}
