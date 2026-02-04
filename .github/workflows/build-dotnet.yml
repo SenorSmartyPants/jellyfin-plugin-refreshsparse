@@ -34,8 +34,7 @@ jobs:
         name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          pattern: build-artifact-*
-          merge-multiple: true
+          name: build-artifact
           retention-days: 30
           if-no-files-found: error
           path: ${{ steps.jprm.outputs.artifact }}
