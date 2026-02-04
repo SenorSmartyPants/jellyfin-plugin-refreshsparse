@@ -1,9 +1,9 @@
 ---
 name: "RefreshSparse"
 guid: "12b44f20-6cfb-4be5-9950-3d0fbe74fa35"
-version: "4.0.0.0"
-targetAbi: "10.9.0.0"
-framework: "net8.0"
+version: "5.0.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
 overview: "Refresh episodes based on (missing) metadata"
 description: >
   Find episode that are recent and/or are missing certain
@@ -11,6 +11,6 @@ description: >
 category: "General"
 owner: "SenorSmartyPants"
 artifacts:
-- "Jellyfin.Plugin.RefreshSparse.dll"
+  - "Jellyfin.Plugin.RefreshSparse.dll"
 changelog: >
-  10.9.0 support
+  10.11.0 support
